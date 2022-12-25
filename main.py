@@ -2,8 +2,10 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog, Tk
 import tkinter
+import tkinter as tk
 import tkinter.messagebox as MB
 from Database.Automata_Pila.database_ap import DB_AP
+from Database.Gramatica_LC.database_glc import DB_GLC
 
 # -----------------------------------------------------------------MENU INICIAL-----------------------------------------------------------------|
 class Menu():
@@ -160,7 +162,27 @@ class CA_GLC(Menu):
         GLC()
     
     def __cargarArchivo(self):
-        pass
+        try:
+            Tk().withdraw()
+            archivo = filedialog.askopenfilename(title = 'Select content image', filetypes= [('Archivo GLC', '*.glc'), ('Archivo GR', '*.gre')])
+
+            with open(archivo, 'r') as file:
+
+                texto = file.readlines()
+                
+                
+                if texto == '':
+                    MB.showerror('aviso', 'No existe datos en el archivo que ha seleccionado')
+                    return 0
+
+                confirmacion = DB_GLC.leerArchivos(texto)
+
+                if confirmacion != 0:
+                    MB.showinfo(message="Se agrego correctamente!", title="Archivo leído")
+                    self.ventana.destroy()
+                    GLC() 
+        except:
+            MB.showerror('Error', 'No ha cargado ningun archivo, por favor vuelva a internarlo')
 
     def Ventana_frame(self):
         self.frame = Frame()
@@ -181,22 +203,101 @@ class IG_GLC(Menu):
     def __init__(self):
         super().General_ventana()
         self.ventana.title("Información general GLC")
-        super().centrar(self.ventana, 500, 490)
-        self.ventana.geometry("500x470")# ANCHO X LARGO
+        super().centrar(self.ventana, 500, 430)
+        self.ventana.geometry("500x410")# ANCHO X LARGO
         self.Ventana_frame()
 
     def __regresar(self):
         self.ventana.destroy()
         GLC()
     
+    def funtionsCombo(self, event):
+        var = event.widget.get()
+        self.nombreGLC = var
+
+        try:
+            listaGLC = DB_GLC.lista_GLC
+            for glc in listaGLC:
+                if glc.nombre != self.nombreGLC:
+                    continue
+                Label(self.frame, text = f"Nombre: {glc.nombre}", bg = "#F9E1BE", font = ("Comic Sans MS", 9)).place(x = 15, y = 50)
+                Label(self.frame, text = f"No terminales: {glc.noTerminales}", bg = "#F9E1BE", font = ("Comic Sans MS", 9)).place(x = 15, y = 100)
+                Label(self.frame, text = f"Terminales: {glc.terminales}", bg = "#F9E1BE", font = ("Comic Sans MS", 9)).place(x = 15, y = 150)
+                Label(self.frame, text = f"No terminal inicial: {glc.noTerminalInicial}", bg = "#F9E1BE", font = ("Comic Sans MS", 9)).place(x = 15, y = 200)
+
+                Label(self.frame, text = f"Producciones:", bg = "#F9E1BE", font = ("Comic Sans MS", 9)).place(x = 260, y = 50)
+
+                listaAux = []
+                for produccion in glc.producciones:
+                    listaAux.append(produccion.origen)
+
+                listaAux = sorted(listaAux)
+
+                for sweet in listaAux:
+                    if listaAux.count(sweet) > 1:
+                        listaAux.remove(sweet)
+
+                listP = []
+                posY = 70
+                for aux in listaAux:
+                    for produc in glc.producciones:
+                        if aux == produc.origen:
+                            if produc.origen not in listP:
+                                if len(produc.destinos) == 3:
+                                    Label(self.frame, text = f"{produc.origen} > {produc.destinos[0]} {produc.destinos[1]} {produc.destinos[2]}", bg = "#F9E1BE", font = ("Comic Sans MS", 9)).place(x = 265, y = posY)
+                                    posY += 20
+                                    listP.append(produc.origen)
+                                    continue
+                                if len(produc.destinos) == 2:
+                                    Label(self.frame, text = f"{produc.origen} > {produc.destinos[0]} {produc.destinos[1]}", bg = "#F9E1BE", font = ("Comic Sans MS", 9)).place(x = 265, y = posY)
+                                    posY += 20
+                                    listP.append(produc.origen)
+                                    continue
+                                if len(produc.destinos) == 1:
+                                    Label(self.frame, text = f"{produc.origen} > {produc.destinos[0]}", bg = "#F9E1BE", font = ("Comic Sans MS", 9)).place(x = 265, y = posY)
+                                    posY += 20
+                                    listP.append(produc.origen)
+                                    continue
+
+                            if len(produc.destinos) == 3:
+                                Label(self.frame, text = f"   | {produc.destinos[0]} {produc.destinos[1]} {produc.destinos[2]}", bg = "#F9E1BE", font = ("Comic Sans MS", 9)).place(x = 265, y = posY)
+                                posY += 20
+                                continue
+                            if len(produc.destinos) == 2:
+                                Label(self.frame, text = f"   | {produc.destinos[0]} {produc.destinos[1]}", bg = "#F9E1BE", font = ("Comic Sans MS", 9)).place(x = 265, y = posY)
+                                posY += 20
+                                continue
+                            if len(produc.destinos) == 1:
+                                Label(self.frame, text = f"   | {produc.destinos[0]}", bg = "#F9E1BE", font = ("Comic Sans MS", 9)).place(x = 265, y = posY)
+                                posY += 20
+                                continue
+
+        except:
+            MB.showwarning(message="Seleccione una GLC para generar el grafo.", title="ERROR")
+
+    def __listaGLC(self):
+        try:
+            listaAux = []
+            for i in DB_GLC.lista_GLC:
+                listaAux.append(i.nombre)
+
+            # MENU DE GLC'S
+            reports = ttk.Combobox(self.frame, width=18, height=5, values = listaAux, state='readonly')
+            reports.place(x = 100, y = 12)
+            reports.current(0)
+            reports.bind('<<ComboboxSelected>>', self.funtionsCombo)
+        except:
+            MB.showwarning(message="Por favor, ingrese sus GLC.", title="Carga de archivos")
+
     def Ventana_frame(self):
         self.frame = Frame()
         self.frame.pack()
-        self.frame.config(bg = "#F9E1BE", width = "490", height = "460", relief = "ridge", bd = 12)
+        self.frame.config(bg = "#F9E1BE", width = "490", height = "400", relief = "ridge", bd = 12)
 
         # BUTTON------
-        Button(self.frame, text = "Atrás", command=self.__regresar, width = 12, height = 1, font = ("Arial", 10), bg = "#E7C09C").place(x = 125, y = 355)
-        
+        Button(self.frame, text = "Atrás", command=self.__regresar, width = 12, height = 1, font = ("Arial", 10), bg = "#E7C09C").place(x = 165, y = 320)
+        self.__btn_MostrarGLC = Button(self.frame, text = "Mostrar GLC", command = self.__listaGLC, width = 12, height = 1, font = ("Arial", 9), bg = "#E7C09C")
+        self.__btn_MostrarGLC.place(x = 245, y = 10)
         self.frame.mainloop()
 
 # (ARBOL DE DERIVACION)---------->
@@ -204,22 +305,73 @@ class AD_GLC(Menu):
     def __init__(self):
         super().General_ventana()
         self.ventana.title("Árbol de derivación GLC")
-        super().centrar(self.ventana, 500, 490)
-        self.ventana.geometry("500x470")# ANCHO X LARGO
+        super().centrar(self.ventana, 500, 600)
+        self.ventana.geometry("500x580")# ANCHO X LARGO
         self.Ventana_frame()
 
     def __regresar(self):
         self.ventana.destroy()
         GLC()
     
+    def myfunction(self, event):
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"),width=200,height=200)
+
+    def funtionsCombo(self, event):
+        var = event.widget.get()
+        self.nombreGLC = var
+
+        try:
+            DB_GLC.graphviz(self.nombreGLC)
+            self.img = tkinter.PhotoImage(file = './arboles_GLC/arbol_GLC.png')
+            self.canvas.create_image(20, 20, image=self.img, anchor=NW)
+
+        except:
+            MB.showwarning(message="Seleccione una GLC para generar el grafo.", title="ERROR")
+
+    def __listaGLC(self):
+        try:
+            listaAux = []
+            for i in DB_GLC.lista_GLC:
+                listaAux.append(i.nombre)
+
+            # MENU DE GLC'S
+            reports = ttk.Combobox(self.frame, width=18, height=5, values = listaAux, state='readonly')
+            reports.place(x = 95, y = 12)
+            reports.current(0)
+            reports.bind('<<ComboboxSelected>>', self.funtionsCombo)
+        except:
+            MB.showwarning(message="Por favor, ingrese sus GLC.", title="Carga de archivos")
+
     def Ventana_frame(self):
         self.frame = Frame()
         self.frame.pack()
-        self.frame.config(bg = "#F9E1BE", width = "490", height = "460", relief = "ridge", bd = 12)
+        self.frame.config(bg = "#F9E1BE", width = "490", height = "580", relief = "ridge", bd = 12)
+
+        ########################################333
+        self.myframe=Frame(self.frame,relief=GROOVE,width=400,height=420,bd=2)
+        self.myframe.place(x=20,y=60)
+        self.myframe.pack_propagate(0)
+
+        self.canvas=Canvas(self.myframe,bg='#EA6D9D',width=300,height=300,scrollregion=(0,0,390,1150))
+        self.hbar=Scrollbar(self.canvas,orient=HORIZONTAL)
+        self.hbar.pack(side=BOTTOM,fill=X)
+        self.hbar.pack_propagate(0)
+        self.hbar.config(command=self.canvas.xview)
+        self.vbar=Scrollbar(self.canvas,orient=VERTICAL)
+        self.vbar.pack(side=RIGHT,fill=Y)
+        self.vbar.pack_propagate(0)
+        self.vbar.config(command=self.canvas.yview)
+        self.canvas.config(width=300,height=300)
+        self.canvas.config(xscrollcommand=self.hbar.set, yscrollcommand=self.vbar.set)
+        self.canvas.pack(side=LEFT,expand=True,fill=BOTH)
+        self.canvas.pack_propagate(0)
+        #######################################33333
 
         # BUTTON------
-        Button(self.frame, text = "Atrás", command=self.__regresar, width = 12, height = 1, font = ("Arial", 10), bg = "#E7C09C").place(x = 125, y = 355)
-        
+        Button(self.frame, text = "Atrás", command=self.__regresar, width = 12, height = 1, font = ("Arial", 10), bg = "#E7C09C").place(x = 156, y = 492)
+        self.__btn_MostrarGLC = Button(self.frame, text = "Mostrar GLC", command = self.__listaGLC, width = 12, height = 1, font = ("Arial", 9), bg = "#E7C09C")
+        self.__btn_MostrarGLC.place(x = 240, y = 10)
+
         self.frame.mainloop()
 # ----------------------------------------------------------------------------------------------------------------------------------------------|
 

@@ -7,6 +7,9 @@ class AutomataPila:
         self.estadoInicial = estadoInicial
         self.estadoAcept = estadoAcept
         self.transiciones = transiciones
+        
+        # PILA AUX
+        self.pila = []
 
     def getNombre(self):
         return self.nombre

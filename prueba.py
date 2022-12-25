@@ -1,51 +1,93 @@
-import tkinter as tk
+class AFD:
+    def __init__(self, estado_inicial,transiciones,aceptacion):
+        self.estado_inicial = estado_inicial
+        self.transiciones = transiciones
+        self.aceptacion = aceptacion
+        self.pila = []
 
-class WindowExample(tk.Tk): 
-    def __init__(self, *args, **kwargs):
-        tk.Tk.__init__(self, *args, **kwargs)
+    def verificacionPila(self, entrada, salida):
+        if entrada != '$' and entrada != '':
+            self.pila.append(entrada)
 
-        # Agregar los widgets....
+        if salida != '$' and salida != '':
 
-        self.labelExample = tk.Label(self, text="Este es un ejemplo de un widget (en este caso un label)")
-        self.labelExample.place(x=13, y=15)
-
-        HideLabelButton = tk.Button(self, text="Ocultar el label", command=self.HideLabel)
-        ShowLabelButton = tk.Button(self, text="Mostrar el label", command=self.ShowLabel)
-
-        HideLabelButton.place(x=485, y=12)
-        ShowLabelButton.place(x=359, y=12)
-
-    def ShowLabel(self): # Mostrar los widgets por medio de esta función al hacer clic
-        self.labelExample.place(x=13, y=15)
-
-    def HideLabel(self): # Ocultar los widgets por medio de esta función al hacer clic
-        self.labelExample.place_forget() 
-
-if __name__ == "__main__":
-    root = WindowExample()
-    root.title('Ejemplo ventana: Ocultar y mostrar widgets')
-    root.geometry('600x80')
-    root.resizable(0,0)
-    root.mainloop() # Fin ciclo de eventos
+            ultPila = self.pila[-1]
+            if ultPila == salida:
+                self.pila.pop()
+            else:
+                return True
 
 
 
-'''import tkinter as tk
+    def verificar(self, cadena):
+        estado = self.estado_inicial
+        indice = 0
 
-root = tk.Tk()
-root.geometry('400x400')
-root.title('Esta ventana se va a cerrar...')
+        while indice < len(cadena):
+
+            if indice == 1:
+                if alfabeto == '$':
+                    indice -= 1
+            caracter = cadena[indice]
+            encontrado = False
+            trans = 1
+
+            for alfabeto, sig, Spila, Epila in self.transiciones[estado]:
+
+                if (alfabeto == '$'and indice == 0):
+                    estado = sig
+                    encontrado = True
+                    estadoPila = self.verificacionPila(Epila, Spila)
+                    break
+
+                if caracter == alfabeto:
+                    estado = sig
+                    encontrado = True
+                    estadoPila = self.verificacionPila(Epila, Spila)
+
+                    if estadoPila:
+                        break
+
+                    if indice == len(cadena)-1:
+                        for alfa, sigi, Spil, Epil in self.transiciones[estado]:
+                            if alfa != '$':
+                                continue
+                            estado = sigi
+                            estadoPila = self.verificacionPila(Epil, Spil)
+
+                    break
+
+                if trans == len(self.transiciones[estado]):
+                    for alf in self.transiciones[estado]:
+                        if alf[0] != '$':
+                            continue
+                        estado = sig
+                        encontrado = True
+                        estadoPila = self.verificacionPila(Epila, Spila)
+                        break
+                trans += 1
+
+            if not encontrado:
+                print("caracter invalido, no se puede hacer una transicion de "+estado+" con el simbolo "+caracter )
+                break 
+
+            if estadoPila:
+                print('ERROR en pila, el ultimo elemento no coincide con el simbolo de pila a sacar.')
+                break
+
+            indice += 1
+
+        if estado not in self.aceptacion and len(self.pila) != 0:
+            print("cadena invalida, no termina en el estado de aceptacion")
+        else:
+            print("cadena valida")
 
 
-def MostrarVentana():
-    root.iconify()
-    root.deiconify()
-    root.title('Ventana visible de nuevo') # Renombrar título de la ventana al volverla a iniciar.
+estado_inicial = "S0"
+transiciones={"S0":[("$","S1","$","#")],"S1":[("x","S1","$","x"),("y","S2","x","$")],"S2":[("y","S2","x","$"), ("$","S3","#","$")]}
+aceptacion = ["S3"]
+cadena = "xxyyy"
 
-def OcultarVentana():
-    root.withdraw()
-    root.after(3000, MostrarVentana)
+prueba_afd = AFD(estado_inicial,transiciones,aceptacion)
 
-
-root.after(3000, OcultarVentana) # Dentro de 3s más o menos inicia la función de eliminación u desaparición de la ventana
-root.mainloop()'''
+prueba_afd.verificar(cadena)
