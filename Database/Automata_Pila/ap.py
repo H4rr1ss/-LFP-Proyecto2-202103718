@@ -31,3 +31,12 @@ class AutomataPila:
 
     def getTransiciones(self):
         return self.transiciones
+
+    def getPila(self):
+        return self.pila
+
+    def setApilar(self, entrada):
+        self.pila.append(entrada)
+    
+    def desapilar(self):
+        self.pila.pop()

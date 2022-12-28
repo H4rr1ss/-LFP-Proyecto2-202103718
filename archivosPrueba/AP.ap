@@ -10,6 +10,20 @@ S1,y,x;S2,$
 S2,y,x;S2,$
 S2,$,#;S3,$
 %
+TAREA4
+0, 1
+a, z
+A,B,C,D,E,F
+A
+F
+A,$,$;B,z
+B,0,$;B,a
+B,1,a;C,$
+C,1,$;D,$
+D,1,a;E,$
+E,1,$;D,$
+D,$,z;F,$
+%
 AP1
 a,b
 a,b,#

@@ -1,5 +1,5 @@
 import tkinter.messagebox as MB
-
+from Database.Automata_Pila.ap import AutomataPila
 
 class Database():
     def __init__(self):
@@ -131,8 +131,93 @@ class Database():
 
                 transiciones[tr[0]] = [entrada]
 
-            print('listo')
+            # CREACION DE OBJETO (AUTOMATA DE PILA)
+            automata = AutomataPila(ap[0], alfabeto_, simbolosPila_, estados_, ap[4], estadosAceptacion_, transiciones)
+            self.lista_AP.append(automata)
+            AP += 1
 
+        return True
 
+# ---------------------------------------------------------------------------------------------------------------------------|
+    def verificacionPila(self, ap, entrada, salida):
+        if entrada != '$' and entrada != '':
+            ap.setApilar(entrada)
+
+        if salida != '$' and salida != '':
+
+            ultPila = ap.getPila()[-1]
+            if ultPila == salida:
+                ap.desapilar()
+            else:
+                return True
+    
+    def validarCadena(self, nombre, cadena):
+        for ap in self.lista_AP:
+            if ap.getNombre() != nombre:
+                continue
+
+            estado = ap.getEstadoI()
+            indice = 0
+            pila = 0
+
+            while indice < len(cadena):
+
+                if indice == 1:
+                    if alfabeto == '$':
+                        indice -= 1
+                caracter = cadena[indice]
+                encontrado = False
+                trans = 1
+
+                for alfabeto, sig, Spila, Epila in ap.getTransiciones()[estado]:
+
+                    if (alfabeto == '$'and indice == 0):
+                        estado = sig
+                        encontrado = True
+                        estadoPila = self.verificacionPila(ap, Epila, Spila)
+                        break
+
+                    if caracter == alfabeto:
+                        estado = sig
+                        encontrado = True
+                        estadoPila = self.verificacionPila(ap, Epila, Spila)
+
+                        if estadoPila:
+                            break
+
+                        if indice == len(cadena)-1:
+                            for alfa, sigi, Spil, Epil in ap.getTransiciones()[estado]:
+                                if alfa != '$':
+                                    continue
+                                estado = sigi
+                                estadoPila = self.verificacionPila(ap, Epil, Spil)
+                        break
+
+                    if trans == len(ap.getTransiciones()[estado]):
+                        for alf in ap.getTransiciones()[estado]:
+                            if alf[0] != '$':
+                                continue
+                            estado = sig
+                            encontrado = True
+                            estadoPila = self.verificacionPila(ap, Epila, Spila)
+                            break
+                    trans += 1
+
+                if not encontrado:
+                    MB.showerror(message=f"Caracter invalido, no se puede hacer una transicion de {estado} con el simbolo {caracter}.", title="ERROR")
+                    break 
+
+                if estadoPila:
+                    pila = 1
+                    MB.showerror(message="El ultimo elemento no coincide con el simbolo de pila a sacar.", title="ERROR")
+                    break
+
+                indice += 1
+
+            if estado not in ap.getEstadoA() and len(ap.getPila()) != 0:
+                if pila != 1:
+                    MB.showerror(message="Cadena invalida, no termina en el estado de aceptación.", title="ERROR")
+            else:
+                MB.showinfo(message="Cadena valida", title="VERIFICACIÓN")
 #---------------------------------------------------------------------------------------------------------------------------|
 DB_AP = Database()

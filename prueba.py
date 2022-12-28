@@ -83,11 +83,14 @@ class AFD:
             print("cadena valida")
 
 
-estado_inicial = "S0"
-transiciones={"S0":[("$","S1","$","#")],"S1":[("x","S1","$","x"),("y","S2","x","$")],"S2":[("y","S2","x","$"), ("$","S3","#","$")]}
-aceptacion = ["S3"]
-cadena = "xxyyy"
+estado_inicial = "A"
+transiciones={'A': [('$', 'B', '$', 'z')], 'B': [('0', 'B', '$', 'a'), ('1', 'C', 'a', '$')], 'C': [('1', 'D', '$', '$')], 'D': [('1', 'E', 'a', '$'), ('$', 'F', 'z', '$')], 'E': [('1', 'D', '$', '$')]}
+aceptacion = ["F"]
+cadena = "001111"
 
 prueba_afd = AFD(estado_inicial,transiciones,aceptacion)
 
 prueba_afd.verificar(cadena)
+
+#000111111
+#001111
