@@ -1,4 +1,8 @@
+import os
 import tkinter.messagebox as MB
+import cv2
+import imutils
+from fpdf import FPDF
 from Database.Automata_Pila.ap import AutomataPila
 
 class Database():
@@ -219,5 +223,159 @@ class Database():
                     MB.showerror(message="Cadena invalida, no termina en el estado de aceptación.", title="ERROR")
             else:
                 MB.showinfo(message="Cadena valida", title="VERIFICACIÓN")
+#---------------------------------------------------------------------------------------------------------------------------|
+
+#---------------------------------------------------------------------------------------------------------------------------|
+    def graphviz(self, nombre):
+        for ap in self.lista_AP:
+
+            if nombre != ap.getNombre():
+                continue
+
+            # -----------------------------------------------GRAFICACIÓN-----------------------------------------------
+            graphviz = 'digraph Patron{ \n\n    rankdir = LR\n    layout = dot\n    node[shape = circle, width = 1, height = 1]; \n    subgraph Cluster_A{ \n    label = "' + 'Nombre: '+ str(ap.getNombre()) + '"   \n    fontcolor ="black" \n    fontsize = 30 \n    bgcolor ="#F1DFB2" \n'
+            
+            for estado in ap.getEstados():
+                if estado == ap.getEstadoI():
+                    graphviz += f'    node{estado}' + '[label = "'+ str(estado) +'\n(inicio)" fontcolor = "#000000" fontsize = 20 fillcolor = "#CFF7E7" style = filled shape = cds]; \n'
+                    continue
+
+                if estado in ap.getEstadoA():
+                    graphviz += f'    node{estado}' + '[label = "'+ str(estado) +'" fontcolor = "#000000" fontsize = 20 fillcolor = "#D0F3E6" style = filled shape = doublecircle]; \n'
+                    continue
+                
+                graphviz += f'    node{estado}' + '[label = "'+ str(estado) +'" fontcolor = "#000000" fontsize = 20 fillcolor = "#CFF7E7" style = filled]; \n'
+
+            # .....................CONEXION DE NODOS.......................|
+            for E_origen in ap.getTransiciones():
+                listEstado = ap.getTransiciones().get(E_origen)
+                
+                for elemento in listEstado:
+                    simbolo = elemento[0]
+                    E_destino = elemento[1]
+                    salidaPila = elemento[2]
+                    entradaPila = elemento[3]
+                    graphviz += f'    node{str(E_origen)}->node{str(E_destino)}[label = "{str(simbolo)},{str(salidaPila)};{str(entradaPila)}"]\n'
+
+            graphviz += '\n    } \n\n}'
+
+            document = './Grafos/info_AP/extras/grafica.txt'
+
+            with open(document, 'w') as grafica:
+                grafica.write(graphviz)
+
+            # .....................MODIFICACION DE TAMAÑO IMAGEN.......................|
+            jpg = './Grafos/info_AP/extras/ap.jpg'
+            os.system(f"dot.exe -Tjpg {document} -o {jpg}")
+
+            img = cv2.imread('./Grafos/info_AP/extras/ap.jpg')
+            img_salida = imutils.resize(img, width=725)
+
+            cv2.imwrite('./Grafos/info_AP/extras/ap.jpg', img_salida)
+            cv2.destroyAllWindows()
+
+            # .....................GENERACION DEL PDF(REPORTE).......................|
+            pdf = FPDF(orientation = "L", unit = "mm", format = "A4")
+    
+            pdf.add_page(),
+            pdf.image("./Grafos/info_AP/extras/ap.jpg", x = 15, y = 100)
+            pdf.image("./Grafos/logo.png", x = 270, y = 9, w = 22, h = 22)
+
+            pdf.set_font('Arial', '', 15)
+            pdf.text(x=80, y=10, txt=f'Estados: {ap.getEstados()}')
+            pdf.text(x=80, y=20, txt=f'Alfabeto: {ap.getAlfabeto()}')
+            pdf.text(x=80, y=30, txt=f'Alfabeto  de pila: {ap.getSimbolos()}')
+            pdf.text(x=80, y=40, txt=f'Estados de aceptacion: {ap.getEstadoA()}')
+            pdf.text(x=80, y=60, txt=f'Estado inicial: {ap.getEstadoI()}')
+            pdf.text(x=170, y=10, txt='Transiciones:')
+
+            posY = 20
+            for EstadoOrigen in ap.getTransiciones():
+                listEstadoo = ap.getTransiciones().get(EstadoOrigen)
+                
+                for element in listEstadoo:
+                    pdf.text(x=173, y=posY, txt=f'{EstadoOrigen},{element[0]};{element[1]}')
+                    posY += 10
+
+            pdf.output(f"./Grafos/info_AP/Reporte__{ap.getNombre()}.pdf")
+            MB.showinfo(message="Se genero correctamente.", title="Reporte creado")
+            break
+#---------------------------------------------------------------------------------------------------------------------------|
+
+
+    def validarRuta(self, nombre, cadena):
+        rutaValidacion = ''
+        for ap in self.lista_AP:
+            if ap.getNombre() != nombre:
+                continue
+
+            estado = ap.getEstadoI()
+            indice = 0
+            pila = 0
+
+            while indice < len(cadena):
+
+                if indice == 1:
+                    if alfabeto == '$':
+                        indice -= 1
+                caracter = cadena[indice]
+                encontrado = False
+                trans = 1
+
+                for alfabeto, sig, Spila, Epila in ap.getTransiciones()[estado]:
+
+                    if (alfabeto == '$'and indice == 0):
+                        rutaValidacion += f'{estado},{alfabeto},{Spila};{sig},{Epila}\n'
+                        estado = sig
+                        encontrado = True
+                        estadoPila = self.verificacionPila(ap, Epila, Spila)
+                        break
+
+                    if caracter == alfabeto:
+                        rutaValidacion += f'{estado},{alfabeto},{Spila};{sig},{Epila}\n'
+                        estado = sig
+                        encontrado = True
+                        estadoPila = self.verificacionPila(ap, Epila, Spila)
+
+                        if estadoPila:
+                            break
+
+                        if indice == len(cadena)-1:
+                            for alfa, sigi, Spil, Epil in ap.getTransiciones()[estado]:
+                                if alfa != '$':
+                                    continue
+                                rutaValidacion += f'{estado},{alfa},{Spil};{sigi},{Epil}\n'
+                                estado = sigi
+                                estadoPila = self.verificacionPila(ap, Epil, Spil)
+                        break
+
+                    if trans == len(ap.getTransiciones()[estado]):
+                        for alf in ap.getTransiciones()[estado]:
+                            if alf[0] != '$':
+                                continue
+                            rutaValidacion += f'{estado},{alfabeto},{Spila};{sig},{Epila}\n'
+                            estado = sig
+                            encontrado = True
+                            estadoPila = self.verificacionPila(ap, Epila, Spila)
+                            break
+                    trans += 1
+
+                if not encontrado:
+                    MB.showerror(message=f"Caracter invalido, no se puede hacer una transicion de {estado} con el simbolo {caracter}.", title="ERROR")
+                    break 
+
+                if estadoPila:
+                    pila = 1
+                    MB.showerror(message="El ultimo elemento no coincide con el simbolo de pila a sacar.", title="ERROR")
+                    break
+
+                indice += 1
+
+            if estado not in ap.getEstadoA() and len(ap.getPila()) != 0:
+                if pila != 1:
+                    MB.showerror(message="Cadena invalida, no termina en el estado de aceptación.", title="ERROR")
+            else:
+                MB.showinfo(message="Cadena valida", title="VERIFICACIÓN")
+                return rutaValidacion
 #---------------------------------------------------------------------------------------------------------------------------|
 DB_AP = Database()

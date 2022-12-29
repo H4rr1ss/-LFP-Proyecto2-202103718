@@ -1,4 +1,4 @@
-class AFD:
+'''class AFD:
     def __init__(self, estado_inicial,transiciones,aceptacion):
         self.estado_inicial = estado_inicial
         self.transiciones = transiciones
@@ -93,4 +93,4 @@ prueba_afd = AFD(estado_inicial,transiciones,aceptacion)
 prueba_afd.verificar(cadena)
 
 #000111111
-#001111
+#001111'''

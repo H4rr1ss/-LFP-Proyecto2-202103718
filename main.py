@@ -62,8 +62,6 @@ class Menu():
 # ----------------------------------------------------------------------------------------------------------------------------------------------|       
 
 
-
-
 # -----------------------------------------------------------------MENU PRINCIPAL---------------------------------------------------------------|
 class Principal(Menu):
     def __init__(self):
@@ -103,8 +101,6 @@ class Principal(Menu):
         self.frame.mainloop()
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------|
-
-
 
 
 # -----------------------------------------------------GRAMATICA LIBRE DE CONTEXTO--------------------------------------------------------------|
@@ -397,6 +393,10 @@ class AP(Menu):
         self.ventana.destroy()
         IG_AP()
 
+    def __ir_pantalla_RV(self):
+        self.ventana.destroy()
+        RV_AP()
+
     def __ir_pantalla_principal(self):
         self.ventana.destroy()
         Principal()
@@ -408,7 +408,7 @@ class AP(Menu):
 
         # BUTTON------
         Button(self.frame, text = "Cargar Archivo", command=self.__ir_pantalla_CA, width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 15, y = 10)
-        Button(self.frame, text = "Ruta de Validación", width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 160, y = 10)
+        Button(self.frame, text = "Ruta de Validación", command=self.__ir_pantalla_RV, width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 160, y = 10)
         Button(self.frame, text = "Información General", command=self.__ir_pantalla_IG, width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 15, y = 70)
         Button(self.frame, text = "Paso a Paso", width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 160, y = 70)
         Button(self.frame, text = "Validar Cadena", command=self.__ir_pantalla_VC, width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 15, y = 130)
@@ -417,7 +417,7 @@ class AP(Menu):
         
         self.frame.mainloop()
 
-# (CARGAR ARCHIVO)---------->
+# (CARGAR ARCHIVO)--------------->
 class CA_AP(Menu):
     def __init__(self):
         super().General_ventana()
@@ -466,7 +466,7 @@ class CA_AP(Menu):
 
         self.frame.mainloop()
 
-# (RUTA DE VALIDACIÓN)---------->
+# (VALIDAR CADENA)--------------->
 class EvaluarCadena_AP(Menu):
     def __init__(self):
         super().General_ventana()
@@ -493,7 +493,7 @@ class EvaluarCadena_AP(Menu):
 
             DB_AP.validarCadena(self.nombreAFD, cadena)
         except:
-            MB.showerror(message="Por favor, elija un AFD.", title="ERROR")
+            MB.showerror(message="Por favor, elija un AP.", title="ERROR")
 
     def __listaAP(self):
         try:
@@ -545,8 +545,7 @@ class IG_AP(Menu):
         AP()
 
     def funtionsCombo(self, event):
-        var = event.widget.get()
-        self.nombreAFD = var
+        self.nombreAP = event.widget.get()
 
     def __listaAP(self):
         try:
@@ -556,12 +555,17 @@ class IG_AP(Menu):
 
             # MENU DE AP
             reports = ttk.Combobox(self.frame, width=15, height=5, values = listaAux, state='readonly')
-            reports.place(x = 15, y = 22)
+            reports.place(x = 15, y = 24)
             reports.current(0)
             reports.bind('<<ComboboxSelected>>', self.funtionsCombo)
         except:
             MB.showwarning(message="Por favor, ingrese sus automata pila.", title="Carga de archivos")
             
+    def __graphviz(self):
+        try:
+            DB_AP.graphviz(self.nombreAP)
+        except:
+            print('ERROR')
 
     def Ventana_frame(self):
         self.frame = Frame()
@@ -572,7 +576,7 @@ class IG_AP(Menu):
         self.__btn_motrarAP = Button(self.frame, text = "Mostrar AP'S", command = self.__listaAP, width = 10, height = 1, font = ("Arial", 10), bg = "#E7C09C")
         self.__btn_motrarAP.place(x = 143, y = 20)
 
-        self.__btn_generarReporte = Button(self.frame, text = "Generar reporte", command = self.__listaAP, width = 13, height = 3, font = ("Arial", 10), bg = "#E7C09C")
+        self.__btn_generarReporte = Button(self.frame, text = "Generar reporte", command = self.__graphviz, width = 13, height = 3, font = ("Arial", 10), bg = "#E7C09C")
         self.__btn_generarReporte.place(x = 60, y = 110)
 
         self.__btn_atras = Button(self.frame, text = "Atrás", command = self.__regresar, width = 6, height = 1, font = ("Arial", 10), bg = "#E7C09C")
@@ -580,14 +584,84 @@ class IG_AP(Menu):
 
         self.frame.mainloop()
 
-
-# (PASO A PASO)---------->
-
-
-# (VALIDAR CADENA)---------->
+# (PASO A PASO)------------------>
 
 
-# (UNA PASADA)---------->
+# (RUTA DE VALIDACIÓN)----------->
+class RV_AP(Menu):
+    def __init__(self):
+        super().General_ventana()
+        self.ventana.title("Ruta de validación")
+        super().centrar(self.ventana, 370, 410)
+        self.ventana.geometry("370x390")# ANCHO X LARGO
+        self.Ventana_frame()   
+
+    def __ir_pantalla_menu(self):
+        self.ventana.destroy()
+        AP()      
+
+    def funtionsCombo(self, event):
+        self.nombreAFD = event.widget.get()
+        if self.contador != 1:
+            self.__ruta["text"] = ""
+
+    def __rutaValidacion(self):
+        try:
+            self.cadena = self.__tb_validar.get()
+
+            if self.cadena == '':
+                MB.showwarning(message="No ha ingresado nada para evaluar.", title="Revise los campos de texto")
+                return 
+
+            ruta = DB_AP.validarRuta(self.nombreAFD, self.cadena)
+            
+            if ruta is not None:
+                self.__ruta = Label(self.frame, text = ruta, bg = "#F9E1BE", font = ("Comic Sans MS", 10))
+                self.__ruta.place(x = 119, y = 100)
+                self.contador += 1
+        except:
+            MB.showerror(message="Por favor, elija un AP.", title="ERROR")
+
+    def __listaAP(self):
+        try:
+            listaAux = []
+            for i in DB_AP.lista_AP:
+                listaAux.append(i.getNombre())
+
+            # MENU DE AP
+            reports = ttk.Combobox(self.frame, width=18, height=5, values = listaAux, state='readonly')
+            reports.place(x = 170, y = 45)
+            reports.current(0)
+            reports.bind('<<ComboboxSelected>>', self.funtionsCombo)
+        except:
+            MB.showwarning(message="Por favor, ingrese sus automata pila.", title="Carga de archivos")
+            
+    def Ventana_frame(self):
+        self.contador = 1
+        self.frame = Frame()
+        self.frame.pack()
+        self.frame.config(bg = "#F9E1BE", width = "360", height = "380", relief = "ridge", bd = 12)
+
+        # LABLES------
+        Label(self.frame, text = "Cadena:", bg = "#F9E1BE", font = ("Comic Sans MS", 10)).place(x = 15, y = 15)
+
+        # JTEXFIELD------
+        self.__tb_validar = Entry(self.frame, font = ("Comic Sans MS", 10), width = 17, justify = "center")
+        self.__tb_validar.place(x = 12, y = 40)
+
+        # BUTTON------
+        self.__btn_Regrasar = Button(self.frame, text = "Regresar", command = self.__ir_pantalla_menu, width = 26, height = 1, font = ("Arial", 9), bg = "#E7C09C")
+        self.__btn_Regrasar.place(x = 60, y = 301)
+        self.__btn_validar = Button(self.frame, text = "Validar ruta", command = self.__rutaValidacion, width = 28, height = 1, font = ("Arial", 9), bg = "#E7C09C")
+        self.__btn_validar.place(x = 55, y = 267)
+        self.__btn_MostrarAFD = Button(self.frame, text = "Mostrar AP'S", command = self.__listaAP, width = 12, height = 1, font = ("Arial", 9), bg = "#E7C09C")
+        self.__btn_MostrarAFD.place(x = 188, y = 10)
+
+        self.frame.mainloop()
+
+
+
+# (UNA PASADA)------------------->
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------|
