@@ -378,4 +378,156 @@ class Database():
                 MB.showinfo(message="Cadena valida", title="VERIFICACIÓN")
                 return rutaValidacion
 #---------------------------------------------------------------------------------------------------------------------------|
+
+#---------------------------------------------------------------------------------------------------------------------------|
+    def graphvizPAP(self, nombre, actual, simboloEntrada, cont):
+        for ap in self.lista_AP:
+
+            if nombre != ap.getNombre():
+                continue
+
+            # -----------------------------------------------GRAFICACIÓN-----------------------------------------------
+            graphviz = 'digraph Patron{ \n\n    rankdir = LR\n    layout = dot\n    node[shape = circle, width = 1, height = 1]; \n    subgraph Cluster_A{ \n    label = "' + 'Nombre: '+ str(ap.getNombre()) + '"   \n    fontcolor ="black" \n    fontsize = 30 \n    bgcolor ="#F1DFB2" \n'
+            
+            for estado in ap.getEstados():
+                if estado == ap.getEstadoI():
+                    if estado == actual:
+                        graphviz += f'    node{estado}' + '[label = "'+ str(estado) +'\n(inicio)" fontcolor = "#000000" fontsize = 20 fillcolor = "#1BB427" style = filled shape = cds]; \n'
+                        continue
+
+                    graphviz += f'    node{estado}' + '[label = "'+ str(estado) +'\n(inicio)" fontcolor = "#000000" fontsize = 20 fillcolor = "#CFF7E7" style = filled shape = cds]; \n'
+                    continue
+
+                if estado in ap.getEstadoA():
+                    if estado == actual:
+                        graphviz += f'    node{estado}' + '[label = "'+ str(estado) +'" fontcolor = "#000000" fontsize = 20 fillcolor = "#1BB427" style = filled shape = doublecircle]; \n'
+                        continue
+
+                    graphviz += f'    node{estado}' + '[label = "'+ str(estado) +'" fontcolor = "#000000" fontsize = 20 fillcolor = "#D0F3E6" style = filled shape = doublecircle]; \n'
+                    continue
+                
+                if estado == actual:
+                    graphviz += f'    node{estado}' + '[label = "'+ str(estado) +'" fontcolor = "#000000" fontsize = 20 fillcolor = "#1BB427" style = filled]; \n'
+                    continue
+
+                graphviz += f'    node{estado}' + '[label = "'+ str(estado) +'" fontcolor = "#000000" fontsize = 20 fillcolor = "#CFF7E7" style = filled]; \n'
+
+            # .....................CONEXION DE NODOS.......................|
+            for E_origen in ap.getTransiciones():
+                listEstado = ap.getTransiciones().get(E_origen)
+                
+                for elemento in listEstado:
+                    simbolo = elemento[0]
+                    E_destino = elemento[1]
+                    salidaPila = elemento[2]
+                    entradaPila = elemento[3]
+
+                    if simbolo == simboloEntrada:
+                        graphviz += f'    node{str(E_origen)}->node{str(E_destino)}[label = "{str(simbolo)},{str(salidaPila)};{str(entradaPila)}" fontcolor = "#9F2149"]\n'
+                        continue
+
+                    graphviz += f'    node{str(E_origen)}->node{str(E_destino)}[label = "{str(simbolo)},{str(salidaPila)};{str(entradaPila)}"]\n'
+
+            graphviz += '\n    } \n\n}'
+
+            document = './Grafos/pasos_AP/extras/grafica.txt'
+
+            with open(document, 'w') as grafica:
+                grafica.write(graphviz)
+
+            # .....................MODIFICACION DE TAMAÑO IMAGEN.......................|
+            jpg = f'./Grafos/pasos_AP/extras/ap{cont}.png'
+            os.system(f"dot.exe -Tpng {document} -o {jpg}")
+
+            img = cv2.imread(f'./Grafos/pasos_AP/extras/ap{cont}.png')
+            img_salida = imutils.resize(img, width=530)
+
+            cv2.imwrite(f'./Grafos/pasos_AP/extras/ap{cont}.png', img_salida)
+            cv2.destroyAllWindows()
+            break
+
+
+
+    def validarCadenaPAP(self, nombre, cadena):
+        for ap in self.lista_AP:
+            if ap.getNombre() != nombre:
+                continue
+
+            estado = ap.getEstadoI()
+            indice = 0
+            pila = 0
+            cont = 1
+
+            while indice < len(cadena):
+
+                if indice == 1:
+                    if alfabeto == '$':
+                        indice -= 1
+                caracter = cadena[indice]
+                encontrado = False
+                trans = 1
+
+                for alfabeto, sig, Spila, Epila in ap.getTransiciones()[estado]:
+
+                    if (alfabeto == '$'and indice == 0):
+                        self.graphvizPAP(ap.getNombre(), estado, alfabeto, cont)
+                        cont += 1
+                        estado = sig
+                        encontrado = True
+                        estadoPila = self.verificacionPila(ap, Epila, Spila)
+                        break
+
+                    if caracter == alfabeto:
+                        self.graphvizPAP(ap.getNombre(), estado, alfabeto, cont)
+                        cont += 1
+                        estado = sig
+                        encontrado = True
+                        estadoPila = self.verificacionPila(ap, Epila, Spila)
+
+                        if estadoPila:
+                            break
+
+                        if indice == len(cadena)-1:
+                            for alfa, sigi, Spil, Epil in ap.getTransiciones()[estado]:
+                                if alfa != '$':
+                                    continue
+
+                                self.graphvizPAP(ap.getNombre(), estado, alfa, cont)
+                                cont += 1
+                                estado = sigi
+                                estadoPila = self.verificacionPila(ap, Epil, Spil)
+                        break
+
+                    if trans == len(ap.getTransiciones()[estado]):
+                        for alf in ap.getTransiciones()[estado]:
+                            if alf[0] != '$':
+                                continue
+
+                            self.graphvizPAP(ap.getNombre(), estado, alf, cont)
+                            cont += 1
+                            estado = sig
+                            encontrado = True
+                            estadoPila = self.verificacionPila(ap, Epila, Spila)
+                            break
+                    trans += 1
+
+                if not encontrado:
+                    MB.showerror(message=f"Caracter invalido, no se puede hacer una transicion de {estado} con el simbolo {caracter}.", title="ERROR")
+                    break 
+
+                if estadoPila:
+                    pila = 1
+                    MB.showerror(message="El ultimo elemento no coincide con el simbolo de pila a sacar.", title="ERROR")
+                    break
+
+                indice += 1
+
+            if estado not in ap.getEstadoA() and len(ap.getPila()) != 0:
+                if pila != 1:
+                    MB.showerror(message="Cadena invalida, no termina en el estado de aceptación.", title="ERROR")
+            else:
+                MB.showinfo(message="Cadena valida", title="VERIFICACIÓN")
+#---------------------------------------------------------------------------------------------------------------------------|
+
+
 DB_AP = Database()

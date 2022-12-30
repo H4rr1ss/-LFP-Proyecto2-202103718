@@ -128,7 +128,6 @@ class GLC(Menu):
         self.ventana.destroy()
         Principal()
 
-
     def Ventana_frame(self):
         self.frame = Frame()
         self.frame.pack()
@@ -311,14 +310,12 @@ class AD_GLC(Menu):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"),width=200,height=200)
 
     def funtionsCombo(self, event):
-        var = event.widget.get()
-        self.nombreGLC = var
+        self.nombreGLC = event.widget.get()
 
         try:
             DB_GLC.graphviz(self.nombreGLC)
             self.img = tkinter.PhotoImage(file = './arboles_GLC/arbol_GLC.png')
             self.canvas.create_image(20, 20, image=self.img, anchor=NW)
-
         except:
             MB.showwarning(message="Seleccione una GLC para generar el grafo.", title="ERROR")
 
@@ -397,6 +394,10 @@ class AP(Menu):
         self.ventana.destroy()
         RV_AP()
 
+    def __ir_pantalla_PaP(self):
+        self.ventana.destroy()
+        PAP_AP()
+
     def __ir_pantalla_principal(self):
         self.ventana.destroy()
         Principal()
@@ -410,9 +411,9 @@ class AP(Menu):
         Button(self.frame, text = "Cargar Archivo", command=self.__ir_pantalla_CA, width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 15, y = 10)
         Button(self.frame, text = "Ruta de Validación", command=self.__ir_pantalla_RV, width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 160, y = 10)
         Button(self.frame, text = "Información General", command=self.__ir_pantalla_IG, width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 15, y = 70)
-        Button(self.frame, text = "Paso a Paso", width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 160, y = 70)
+        Button(self.frame, text = "Paso a Paso", command=self.__ir_pantalla_PaP, width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 160, y = 70)
         Button(self.frame, text = "Validar Cadena", command=self.__ir_pantalla_VC, width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 15, y = 130)
-        Button(self.frame, text = "Una Pasada", width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 160, y = 130)
+        Button(self.frame, text = "Una Pasada", command=self.__ir_pantalla_PaP, width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 160, y = 130)
         Button(self.frame, text = "Atrás", command=self.__ir_pantalla_principal,  width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 85, y = 198)
         
         self.frame.mainloop()
@@ -585,6 +586,93 @@ class IG_AP(Menu):
         self.frame.mainloop()
 
 # (PASO A PASO)------------------>
+class PAP_AP(Menu):
+    def __init__(self):
+        super().General_ventana()
+        self.ventana.title("Paso a Paso")
+        super().centrar(self.ventana, 650, 430)
+        self.ventana.geometry("650x410")# ANCHO X LARGO
+        self.Ventana_frame() 
+
+    def __regresar(self):
+        self.ventana.destroy()
+        AP()
+
+    def funtionsCombo(self, event):
+        self.nombreAP = event.widget.get()
+
+    def myfunction(self, event):
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"),width=200,height=200)
+
+    def __listaAP(self):
+        try:
+            listaAux = []
+            for i in DB_AP.lista_AP:
+                listaAux.append(i.getNombre())
+
+            # MENU DE AP
+            reports = ttk.Combobox(self.frame, width=30, height=5, values = listaAux, state='readonly')
+            reports.place(x = 120, y = 12)
+            reports.current(0)
+            reports.bind('<<ComboboxSelected>>', self.funtionsCombo)
+        except:
+            MB.showwarning(message="Por favor, ingrese sus automata pila.", title="Carga de archivos")
+            
+    def __graficarPasos(self):
+        try:
+            if self.__tb_validar.get() != '':
+                DB_AP.validarCadenaPAP(self.nombreAP, self.__tb_validar.get())
+                self.img = tkinter.PhotoImage(file = './Grafos/pasos_AP/extras/ap1.png')
+                self.canvas.create_image(1, 1, image=self.img, anchor=NW)
+        except:
+            print('ERROR')
+
+    def Ventana_frame(self):
+        self.frame = Frame()
+        self.frame.pack()
+        self.frame.config(bg = "#F9E1BE", width = "640", height = "400", relief = "ridge", bd = 12)
+
+        self.myframe=Frame(self.frame,relief=GROOVE,width=541,height=240,bd=2)
+        self.myframe.place(x=27,y=99)
+        self.myframe.pack_propagate(0)
+
+        self.canvas=Canvas(self.myframe,bg='#FEF4E6',width=540,height=240,scrollregion=(0,0,538,270))
+        self.hbar=Scrollbar(self.canvas,orient=HORIZONTAL)
+        self.hbar.pack(side=BOTTOM,fill=X)
+        self.hbar.pack_propagate(0)
+        self.hbar.config(command=self.canvas.xview)
+        self.vbar=Scrollbar(self.canvas,orient=VERTICAL)
+        self.vbar.pack(side=RIGHT,fill=Y)
+        self.vbar.pack_propagate(0)
+        self.vbar.config(command=self.canvas.yview)
+        self.canvas.config(width=300,height=300)
+        self.canvas.config(xscrollcommand=self.hbar.set, yscrollcommand=self.vbar.set)
+        self.canvas.pack(side=LEFT,expand=True,fill=BOTH)
+        self.canvas.pack_propagate(0)
+
+
+        # LABEL-------
+        Label(self.frame, text = "Autómata", bg = "#F9E1BE", font = ("Comic Sans MS", 10)).place(x = 26, y = 10)
+        Label(self.frame, text = "Cadena", bg = "#F9E1BE", font = ("Comic Sans MS", 10)).place(x = 26, y = 55)
+
+        # BUTTON------
+        self.__btn_motrarAP = Button(self.frame, text = "Mostrar AP'S", command = self.__listaAP, width = 10, height = 1, font = ("Arial", 10), bg = "#E7C09C")
+        self.__btn_motrarAP.place(x = 353, y = 9)
+
+        self.__btn_generarReporte = Button(self.frame, text = "Validar", command = self.__graficarPasos, width = 10, height = 1, font = ("Arial", 10), bg = "#E7C09C")
+        self.__btn_generarReporte.place(x = 353, y = 50)
+
+        self.__btn_sig = Button(self.frame, text = "Siguiente", width = 9, height = 1, font = ("Arial", 10), bg = "#E7C09C")
+        self.__btn_sig.place(x = 476, y = 9)
+
+        self.__btn_atras = Button(self.frame, text = "Salir", command = self.__regresar, width = 9, height = 1, font = ("Arial", 10), bg = "#E7C09C")
+        self.__btn_atras.place(x = 476, y = 50)
+
+        # JTEXTFIELD--
+        self.__tb_validar = Entry(self.frame, font = ("Comic Sans MS", 10), width = 25, justify = "center")
+        self.__tb_validar.place(x = 120, y = 57)
+
+        self.frame.mainloop()
 
 
 # (RUTA DE VALIDACIÓN)----------->
