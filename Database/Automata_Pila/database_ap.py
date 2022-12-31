@@ -446,8 +446,6 @@ class Database():
             cv2.destroyAllWindows()
             break
 
-
-
     def validarCadenaPAP(self, nombre, cadena):
         for ap in self.lista_AP:
             if ap.getNombre() != nombre:
@@ -492,9 +490,8 @@ class Database():
                                 if alfa != '$':
                                     continue
 
-                                self.graphvizPAP(ap.getNombre(), estado, alfa, cont)
-                                cont += 1
                                 estado = sigi
+                                self.graphvizPAP(ap.getNombre(), estado, alfa, cont)
                                 estadoPila = self.verificacionPila(ap, Epil, Spil)
                         break
 
@@ -504,8 +501,8 @@ class Database():
                                 continue
 
                             self.graphvizPAP(ap.getNombre(), estado, alf, cont)
-                            cont += 1
                             estado = sig
+                            cont += 1
                             encontrado = True
                             estadoPila = self.verificacionPila(ap, Epila, Spila)
                             break
@@ -527,7 +524,8 @@ class Database():
                     MB.showerror(message="Cadena invalida, no termina en el estado de aceptación.", title="ERROR")
             else:
                 MB.showinfo(message="Cadena valida", title="VERIFICACIÓN")
-#---------------------------------------------------------------------------------------------------------------------------|
 
+        return cont
+#---------------------------------------------------------------------------------------------------------------------------|
 
 DB_AP = Database()

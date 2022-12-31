@@ -367,8 +367,6 @@ class AD_GLC(Menu):
 # ----------------------------------------------------------------------------------------------------------------------------------------------|
 
 
-
-
 # ----------------------------------------------------------AUTOMATA DE PILA--------------------------------------------------------------------|
 class AP(Menu):
     def __init__(self):
@@ -413,7 +411,7 @@ class AP(Menu):
         Button(self.frame, text = "Información General", command=self.__ir_pantalla_IG, width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 15, y = 70)
         Button(self.frame, text = "Paso a Paso", command=self.__ir_pantalla_PaP, width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 160, y = 70)
         Button(self.frame, text = "Validar Cadena", command=self.__ir_pantalla_VC, width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 15, y = 130)
-        Button(self.frame, text = "Una Pasada", command=self.__ir_pantalla_PaP, width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 160, y = 130)
+        Button(self.frame, text = "Una Pasada", width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 160, y = 130)
         Button(self.frame, text = "Atrás", command=self.__ir_pantalla_principal,  width = 14, height = 2, font = ("Arial", 10), bg = "#E7C09C").place(x = 85, y = 198)
         
         self.frame.mainloop()
@@ -621,22 +619,34 @@ class PAP_AP(Menu):
     def __graficarPasos(self):
         try:
             if self.__tb_validar.get() != '':
-                DB_AP.validarCadenaPAP(self.nombreAP, self.__tb_validar.get())
+                self.cantImas = DB_AP.validarCadenaPAP(self.nombreAP, self.__tb_validar.get())
+                self.contSiguientes = 2
                 self.img = tkinter.PhotoImage(file = './Grafos/pasos_AP/extras/ap1.png')
                 self.canvas.create_image(1, 1, image=self.img, anchor=NW)
         except:
             print('ERROR')
+
+    def __btn_siguiente(self):
+        try:
+            if self.contSiguientes <= self.cantImas:
+                self.img = tkinter.PhotoImage(file = f'./Grafos/pasos_AP/extras/ap{str(self.contSiguientes)}.png')
+                self.canvas.create_image(1, 1, image=self.img, anchor=NW)
+                self.contSiguientes += 1
+            else:
+                MB.showwarning(message=f"Ya no hay más imagenes.", title="CUIDADO")
+        except:
+            print("ERROR")
 
     def Ventana_frame(self):
         self.frame = Frame()
         self.frame.pack()
         self.frame.config(bg = "#F9E1BE", width = "640", height = "400", relief = "ridge", bd = 12)
 
-        self.myframe=Frame(self.frame,relief=GROOVE,width=541,height=240,bd=2)
-        self.myframe.place(x=27,y=99)
+        self.myframe=Frame(self.frame,relief=GROOVE,width=551,height=240,bd=2)
+        self.myframe.place(x=22,y=99)
         self.myframe.pack_propagate(0)
 
-        self.canvas=Canvas(self.myframe,bg='#FEF4E6',width=540,height=240,scrollregion=(0,0,538,270))
+        self.canvas=Canvas(self.myframe,bg='#FEF4E6',width=550,height=240,scrollregion=(0,0,540,270))
         self.hbar=Scrollbar(self.canvas,orient=HORIZONTAL)
         self.hbar.pack(side=BOTTOM,fill=X)
         self.hbar.pack_propagate(0)
@@ -662,7 +672,7 @@ class PAP_AP(Menu):
         self.__btn_generarReporte = Button(self.frame, text = "Validar", command = self.__graficarPasos, width = 10, height = 1, font = ("Arial", 10), bg = "#E7C09C")
         self.__btn_generarReporte.place(x = 353, y = 50)
 
-        self.__btn_sig = Button(self.frame, text = "Siguiente", width = 9, height = 1, font = ("Arial", 10), bg = "#E7C09C")
+        self.__btn_sig = Button(self.frame, text = "Siguiente", command=self.__btn_siguiente, width = 9, height = 1, font = ("Arial", 10), bg = "#E7C09C")
         self.__btn_sig.place(x = 476, y = 9)
 
         self.__btn_atras = Button(self.frame, text = "Salir", command = self.__regresar, width = 9, height = 1, font = ("Arial", 10), bg = "#E7C09C")
@@ -673,7 +683,6 @@ class PAP_AP(Menu):
         self.__tb_validar.place(x = 120, y = 57)
 
         self.frame.mainloop()
-
 
 # (RUTA DE VALIDACIÓN)----------->
 class RV_AP(Menu):
@@ -747,14 +756,7 @@ class RV_AP(Menu):
 
         self.frame.mainloop()
 
-
-
-# (UNA PASADA)------------------->
-
-
 # ----------------------------------------------------------------------------------------------------------------------------------------------|
-
-
 
 
 # -------------------------------------------------------------------SALIR----------------------------------------------------------------------|
@@ -796,4 +798,4 @@ class salir(Menu):
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------|
 
-Principal()
+Menu()
